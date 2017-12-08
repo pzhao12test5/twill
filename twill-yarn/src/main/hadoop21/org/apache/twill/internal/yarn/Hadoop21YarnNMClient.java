@@ -19,7 +19,6 @@ package org.apache.twill.internal.yarn;
 
 import com.google.common.base.Throwables;
 import com.google.common.util.concurrent.AbstractIdleService;
-import com.google.common.util.concurrent.Uninterruptibles;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.yarn.api.records.Container;
 import org.apache.hadoop.yarn.api.records.ContainerLaunchContext;
@@ -29,8 +28,6 @@ import org.apache.hadoop.yarn.client.api.NMClient;
 import org.apache.twill.common.Cancellable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.concurrent.TimeUnit;
 
 /**
  * Wrapper class for {@link NMClient} for Hadoop version 2.1 or greater.
@@ -85,13 +82,12 @@ public final class Hadoop21YarnNMClient extends AbstractIdleService implements Y
 
       try {
         nmClient.stopContainer(container.getId(), container.getNodeId());
-        while (true) {
+        boolean completed = false;
+        while (!completed) {
           ContainerStatus status = nmClient.getContainerStatus(container.getId(), container.getNodeId());
-          LOG.trace("Container status: {} {}", status, status.getDiagnostics());
-          if (status.getState() == ContainerState.COMPLETE) {
-            break;
-          }
-          Uninterruptibles.sleepUninterruptibly(200, TimeUnit.MILLISECONDS);
+          LOG.info("Container status: {} {}", status, status.getDiagnostics());
+
+          completed = (status.getState() == ContainerState.COMPLETE);
         }
         LOG.info("Container {} stopped.", container.getId());
       } catch (Exception e) {

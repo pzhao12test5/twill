@@ -31,7 +31,6 @@ import org.junit.runners.Suite;
   DistributeShellTestRun.class,
   EchoServerTestRun.class,
   EnvironmentTestRun.class,
-  EventHandlerTestRun.class,
   FailureRestartTestRun.class,
   InitializeFailTestRun.class,
   JvmOptionsTestRun.class,
