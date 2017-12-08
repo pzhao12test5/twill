@@ -473,7 +473,7 @@ final class YarnTwillPreparer implements TwillPreparer {
       return extraOptions;
     }
     String classLoaderProperty = "-D" + Constants.TWILL_CONTAINER_CLASSLOADER + "=" + classLoaderClassName;
-    return extraOptions.isEmpty() ? classLoaderProperty : extraOptions + " " + classLoaderProperty;
+    return extraOptions.isEmpty() ? classLoaderProperty : " " + classLoaderProperty;
   }
 
   private void setEnv(String runnableName, Map<String, String> env, boolean overwrite) {
@@ -774,16 +774,17 @@ final class YarnTwillPreparer implements TwillPreparer {
   }
 
   private JvmOptions saveJvmOptions(final Path targetPath) throws IOException {
+    // Updates the extra options with the classloader name if necessary
+    final String globalOptions = addClassLoaderClassName(extraOptions);
     // Append runnable specific extra options.
     Map<String, String> runnableExtraOptions = Maps.newHashMap(
       Maps.transformValues(this.runnableExtraOptions, new Function<String, String>() {
         @Override
-        public String apply(String options) {
-          return addClassLoaderClassName(extraOptions.isEmpty() ? options : extraOptions + " " + options);
+        public String apply(String extraOptions) {
+          return globalOptions.isEmpty() ? extraOptions : globalOptions + " " + extraOptions;
         }
       }));
 
-    String globalOptions = addClassLoaderClassName(extraOptions);
     JvmOptions jvmOptions = new JvmOptions(globalOptions, runnableExtraOptions, debugOptions);
     if (globalOptions.isEmpty() && runnableExtraOptions.isEmpty()
       && JvmOptions.DebugOptions.NO_DEBUG.equals(debugOptions)) {
